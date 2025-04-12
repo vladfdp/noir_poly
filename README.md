@@ -4,7 +4,7 @@ A polynomial library implemented in Noir.
 
 ## Features
 
-- Core polynomial representation with coefficient-based storage
+- Core polynomial coefficient representation with constant factor first
 - Basic arithmetic operations: addition, subtraction, multiplication, division
 - Polynomial evaluation at field points
 
