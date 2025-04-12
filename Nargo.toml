@@ -1,0 +1,6 @@
+[package]
+name = "noir_poly"
+type = "lib"
+authors = [""]
+
+[dependencies]
