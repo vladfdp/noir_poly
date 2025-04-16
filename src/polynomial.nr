@@ -1,4 +1,5 @@
 use crate::MAX_DEGREE::MAX_DEGREE;
+use crate::domain::Domain;
 pub struct Polynomial {
     coefficients: [Field; MAX_DEGREE + 1],
     degree: u32,
@@ -114,8 +115,10 @@ impl Polynomial {
 
     pub fn evaluate(self, x: Field) -> Field {
         let mut result: Field = 0;
+        let mut x_power = 1;
         for i in 0..MAX_DEGREE + 1 {
-            result += self.coefficients[i] * x.pow_32(i as Field);
+            result += self.coefficients[i] * x_power;
+            x_power *= x;
         }
         result
     }
@@ -163,6 +166,16 @@ impl Polynomial {
         result
     }
 
+}
+
+pub fn multiplier<let N: u32,let M: u32>(a: [Field; N], b: [Field; M]) -> [Field; N + M - 1] {
+    let mut result = [0; N + M - 1];
+    for i in 0..N {
+        for j in 0..M {
+            result[i + j] += a[i] * b[j];
+        }
+    }
+    result
 }
 
 pub fn add_arrays(a: [Field; MAX_DEGREE + 1], b: [Field; MAX_DEGREE + 1]) -> [Field; MAX_DEGREE + 1] {
@@ -385,6 +398,7 @@ fn test_mul() {
     }
     assert(result4.get_degree() == 14);
 
+
 }
 
 #[test]
@@ -422,3 +436,4 @@ fn test_div() {
     assert(quotient3 == expected_quotient3);
     assert(remainder3 == expected_remainder3);
 }
+
