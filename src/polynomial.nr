@@ -171,7 +171,7 @@ impl Polynomial {
     pub fn ntt(self, domain: Domain) -> LagrangePolynomial {
         let mut new_coeffs = bit_reverse_array(self.coefficients);
         new_coeffs = CT_butterfly(new_coeffs, domain);
-        LagrangePolynomial::new(new_coeffs, self.degree)
+        LagrangePolynomial::new(new_coeffs)
     }
 }
 
