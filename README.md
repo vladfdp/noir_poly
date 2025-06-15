@@ -78,5 +78,6 @@ The library uses parameterized types `Polynomial<SIZE, LOG_SIZE>` where `SIZE` i
 
 ### Requirements
 - Domain size must be a power of 2 and specified at compile time
-- LOG_SIZE must equal log₂(SIZE)
+- Polynomial sizes must be a power of 2 and specified at compile time
+- LOG_SIZE must equal log₂(SIZE) for a Polynomial<SIZE,LOG_SIZE>, same for lagrange polys and domains
 - Operations requiring NTT need a domain with sufficient capacity 
