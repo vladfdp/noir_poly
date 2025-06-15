@@ -1,6 +1,3 @@
-// Define MAX_DEGREE or import it if it's defined elsewhere (e.g., in a constants file)
-// Assuming it's defined in src/constants.nr or similar
-use crate::MAX_DEGREE::{MAX_DEGREE, MAX_DEGREE_LOG};
 use crate::domain::Domain;
 
 pub fn add_arrays<let N: u32, let M: u32>(a: [Field; N], b: [Field; M]) -> [Field; N] {
@@ -84,9 +81,7 @@ comptime fn log2(N: u32) -> u32 {
 }
 
 // Reorders the elements of an array according to the bit-reversal permutation of indices.
-pub fn bit_reverse_array<let N: u32>(a: [Field; N]) -> [Field; N] {
-    comptime let LOG_N = 3; //comptime {log2(N)};        // TODO: remove this________________________________________________________
-
+pub fn bit_reverse_array<let N: u32, let LOG_N: u32>(a: [Field; N]) -> [Field; N] {
     let mut result = [0; N];
 
     for i in 0..N {
@@ -97,15 +92,13 @@ pub fn bit_reverse_array<let N: u32>(a: [Field; N]) -> [Field; N] {
 }
 
 // Cooley-Tukey FFT butterfly operation
-pub fn CT_butterfly<let N: u32, let M: u32>(coeffs: [Field; N], domain: Domain<M>) -> [Field; N] {
-    let LOG_N = comptime {log2(N)};
-    let LOG_M = comptime {log2(M)};
-    let step = comptime {1 << (LOG_M - LOG_N)};
+pub fn CT_butterfly<let SIZE: u32, let LOG_SIZE: u32, let DOMAIN_SIZE: u32, let DOMAIN_LOG_SIZE: u32>(coeffs: [Field; SIZE], domain: Domain<DOMAIN_SIZE, DOMAIN_LOG_SIZE>) -> [Field; SIZE] {
+    let step = DOMAIN_SIZE/SIZE;
 
     let mut new_coeffs = coeffs;
-    for i in 1..(LOG_N + 1) {
-        let block_size = 1 << i;
-        let num_blocks = N / block_size;
+    for i in 1..(LOG_SIZE + 1) {
+        let block_size = 1 << (i as u8);
+        let num_blocks = SIZE / block_size;
         let twiddle_factor = domain.get_root(num_blocks * step);
 
         for j in 0..num_blocks {
@@ -124,15 +117,13 @@ pub fn CT_butterfly<let N: u32, let M: u32>(coeffs: [Field; N], domain: Domain<M
     new_coeffs
 }
 
-pub fn inverse_CT_butterfly<let N: u32, let M: u32>(coeffs: [Field; N], domain: Domain<M>) -> [Field; N] {
-    let LOG_N = comptime {log2(N)};
-    let LOG_M = comptime {log2(M)};
-    let step = comptime {1 << (LOG_M - LOG_N)};
+pub fn inverse_CT_butterfly<let SIZE: u32, let LOG_SIZE: u32, let DOMAIN_SIZE: u32, let DOMAIN_LOG_SIZE: u32>(coeffs: [Field; SIZE], domain: Domain<DOMAIN_SIZE, DOMAIN_LOG_SIZE>) -> [Field; SIZE] {
+    let step = DOMAIN_SIZE/SIZE;
 
     let mut new_coeffs = coeffs;
-    for i in 1..(LOG_N + 1) {
-        let block_size = 1 << i;
-        let num_blocks = N / block_size;
+    for i in 1..(LOG_SIZE + 1) {
+        let block_size = 1 << (i as u8);
+        let num_blocks = SIZE / block_size;
         let twiddle_factor = 1 / domain.get_root(num_blocks * step);
 
         for j in 0..num_blocks {
@@ -148,5 +139,118 @@ pub fn inverse_CT_butterfly<let N: u32, let M: u32>(coeffs: [Field; N], domain: 
             }   
         }
     }
-    scalar_multiply_array::<N>(new_coeffs, 1 / (N as Field))
+    scalar_multiply_array::<SIZE>(new_coeffs, 1 / (SIZE as Field))
+}
+
+// ==========================================
+// Tests for Array Utilities
+// ==========================================
+
+#[test]
+fn test_add_arrays() {
+    let a = [1, 2, 3, 4];
+    let b = [5, 6];
+    let result = add_arrays::<4, 2>(a, b);
+    assert(result[0] == 6);
+    assert(result[1] == 8);
+    assert(result[2] == 3);
+    assert(result[3] == 4);
+
+    // Edge case: same size arrays
+    let c = [1, 2];
+    let d = [3, 4];
+    let result2 = add_arrays::<2, 2>(c, d);
+    assert(result2[0] == 4);
+    assert(result2[1] == 6);
+}
+
+#[test]
+fn test_sub_arrays() {
+    let a = [10, 20, 30, 40];
+    let b = [5, 6];
+    let result = sub_arrays::<4, 2>(a, b);
+    assert(result[0] == 5);
+    assert(result[1] == 14);
+    assert(result[2] == 30);
+    assert(result[3] == 40);
+
+    // Edge case: same size arrays
+    let c = [10, 15];
+    let d = [3, 5];
+    let result2 = sub_arrays::<2, 2>(c, d);
+    assert(result2[0] == 7);
+    assert(result2[1] == 10);
+}
+
+#[test]
+fn test_neg_array() {
+    let a = [1, -2, 0, 5];
+    let result = neg_array::<4>(a);
+    assert(result[0] == -1);
+    assert(result[1] == 2);
+    assert(result[2] == 0);
+    assert(result[3] == -5);
+}
+
+#[test]
+fn test_scalar_multiply_array() {
+    let a = [1, 2, 3];
+    let scalar = 5;
+    let result = scalar_multiply_array::<3>(a, scalar);
+    assert(result[0] == 5);
+    assert(result[1] == 10);
+    assert(result[2] == 15);
+
+    // Edge case: multiply by zero
+    let result_zero = scalar_multiply_array::<3>(a, 0);
+    assert(result_zero[0] == 0);
+    assert(result_zero[1] == 0);
+    assert(result_zero[2] == 0);
+}
+
+#[test]
+fn test_pointwise_multiply_arrays() {
+    let a = [1, 2, 3, 4];
+    let b = [2, 3, 0, 5];
+    let result = pointwise_multiply_arrays::<4>(a, b);
+    assert(result[0] == 2);
+    assert(result[1] == 6);
+    assert(result[2] == 0);
+    assert(result[3] == 20);
+}
+
+#[test]
+fn test_get_last_non_zero_index() {
+    let a = [1, 2, 3, 0];
+    let index = get_last_non_zero_index::<4>(a);
+    assert(index == 2);
+
+    // Edge case: all zeros
+    let b = [0, 0, 0, 0];
+    let index_zero = get_last_non_zero_index::<4>(b);
+    assert(index_zero == 0);
+
+    // Edge case: last element non-zero
+    let c = [0, 0, 0, 5];
+    let index_last = get_last_non_zero_index::<4>(c);
+    assert(index_last == 3);
+}
+
+#[test]
+fn test_bit_reverse_array() {
+    // Test with size 4 (LOG_N = 2)
+    let a = [1, 2, 3, 4];
+    let result = bit_reverse_array::<4, 2>(a);
+    // Bit reversal: 0->0, 1->2, 2->1, 3->3
+    assert(result[0] == 1); // a[0] -> result[0]
+    assert(result[1] == 3); // a[2] -> result[1]
+    assert(result[2] == 2); // a[1] -> result[2]
+    assert(result[3] == 4); // a[3] -> result[3]
+
+    // Test with size 2 (LOG_N = 1)
+    let b = [5, 6];
+    let result2 = bit_reverse_array::<2, 1>(b);
+    // Bit reversal: 0->0, 1->1
+    assert(result2[0] == 5);
+    assert(result2[1] == 6);
 }
