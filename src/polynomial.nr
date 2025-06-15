@@ -25,6 +25,7 @@ impl<let SIZE: u32, let LOG_SIZE: u32> Polynomial<SIZE, LOG_SIZE> {
     // Creates a polynomial from a variable-length slice of coefficients
     // Coefficients are ordered from constant term to highest degree term
     pub fn new_from_slice(coefficients: [Field]) -> Self {
+        assert(SIZE == 1 << (LOG_SIZE as u8));
 
         let mut coeff_array = [0; SIZE];
 

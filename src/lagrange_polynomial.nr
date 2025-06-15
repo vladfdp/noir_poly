@@ -22,7 +22,8 @@ impl<let SIZE: u32, let LOG_SIZE: u32> LagrangePolynomial<SIZE, LOG_SIZE> {
     }
 
     pub fn new_from_slice(evals: [Field]) -> Self {
-
+        assert(SIZE == 1 << (LOG_SIZE as u8));
+        
         let mut evals_array = [0; SIZE];
 
         for i in 0..SIZE {
