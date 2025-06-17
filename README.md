@@ -35,7 +35,7 @@ The library uses parameterized types `Polynomial<SIZE, LOG_SIZE>` where `SIZE` i
     let value = poly1.evaluate(2);                 // Returns 17
     
     // Create a domain for NTT-based operations
-    let domain = comptime { Domain::<16, 4>::new() }; //you only need to create it once with the max size
+    let domain = comptime { Domain::<16, 4>::new() }; //you only need to create it once with the max size, it's required for mul and div
     
     // Multiplication (returns larger polynomial)
     let product = poly1.mul(poly2, domain);        // Returns Polynomial<16, 4>
@@ -49,11 +49,11 @@ The library uses parameterized types `Polynomial<SIZE, LOG_SIZE>` where `SIZE` i
     let larger_poly = poly1.expand::<16, 4>();     // Convert to larger capacity
     let smaller_poly = larger_poly.reduce::<8, 3>(); // Convert back (must have trailing zeros)
     
-    // Lagrange basis polynomials (NTT form)
+    // Lagrange basis polynomials
     let lagrange_poly1 = poly1.ntt(domain);        // Convert to Lagrange basis
     let lagrange_poly2 = poly2.expand::<8, 3>().ntt(domain); // Expand poly2 first, then convert
     
-    // Operations in Lagrange basis (often faster)
+    // Operations in Lagrange basis
     let lagrange_sum = lagrange_poly1.add(lagrange_poly2);
     let lagrange_product = lagrange_poly1.mul(lagrange_poly2);
     
